@@ -26,10 +26,16 @@ typedef struct {
 	char name[21];
 } Team;
 
-int comp(const void* t1, const void* t2) {
-    Team *a = (Team*)t1;
-    Team *b = (Team*)t2;
-    
+typedef int (*bubble_sort_cb_t) (const Team* a, const Team* b);
+
+
+int comp(const Team* a, const Team* b);
+void swap(Team* a, Team* b);
+void bubble_sort(Team* arr, size_t size, bubble_sort_cb_t func);
+void match_up(Team* t1, Team *t2, int t1_goals, int t2_goals)
+
+
+int comp(const Team* a, const Team* b) {
     if (a->s.P > b->s.P) return -1;
     if (a->s.P < b->s.P) return 1;
     else { /* Puanlari esit, averajlara bakalim - SS */
@@ -39,7 +45,30 @@ int comp(const void* t1, const void* t2) {
 	}
 }
 
-void matchUp(Team* t1, Team *t2, int t1_goals, int t2_goals) {
+void swap(Team* a, Team* b) {
+	/* TODO: Correct possible mistakes - SS */
+	/* TODO: Undefined behaviorlar icin memory leak var mi bakalim - SS */
+
+	if (a == b) return; /* Optimize ediyorum - SS */
+	Team* temp;
+	temp = malloc(sizeof(Team));
+	memcpy(temp, a, sizeof(Team));
+	memcpy(a, b, sizeof(Team));
+	memcpy(b, temp, sizeof(Team));
+	free(temp);
+}
+
+void bubble_sort(Team* arr, size_t size, bubble_sort_cb_t func) { /* TODO: Optimize etmemiz gerek - SS */
+	size_t i, j;
+	for (i = 0; i < size; i++) {
+		for (j = 0; j < size; j++) {
+			if (func(arr + i, arr + j) < 0)
+				swap(arr + i, arr + j);
+		}
+	}
+}
+
+void match_up(Team* t1, Team *t2, int t1_goals, int t2_goals) {
 	/* T1 Kazanir */
 	if (t1_goals > t2_goals) {
 		t1->s.G++; /* Galibiyet */
@@ -120,11 +149,11 @@ int main(int argc, char* argv[]) {
 		for (i = j; i < GROUPS_TEAM_COUNT - 1; ++i) {
 			printf("%s ile %s arasindaki skor: ", teams[j].name, teams[i + 1].name);
 			while (!chk_format(&score1, &score2));
-			matchUp(&teams[j], &teams[i + 1], score1, score2);
+			match_up(&teams[j], &teams[i + 1], score1, score2);
 		}
 	}
 	
-	qsort(teams, GROUPS_TEAM_COUNT, sizeof(Team), comp);
+	bubble_sort(teams, GROUPS_TEAM_COUNT, comp);
 	
 	print_table_header();
 	for (i = 0; i < GROUPS_TEAM_COUNT; i++) {
